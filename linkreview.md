@@ -30,3 +30,13 @@
 |He P. et al. DEBERTA: DECODING-ENHANCED BERT WITH DISENTANGLED ATTENTION //International Conference on Learning Representations.|[link](https://openreview.net/forum?id=XPZIaotutsD)||
 |Zhang J. et al. WHY GRADIENT CLIPPING ACCELERATES TRAINING: Atheoretical JUSTIFICATION FOR ADAPTIVITY.|[link](https://sls.csail.mit.edu/publications/2020/TianxingHe_ICLR-2020.pdf)||
 |Vaswani A. et al. Attention is all you need //Advances in neural information processing systems. – 2017. – Т. 30.|[link](https://proceedings.neurips.cc/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html)||
+|Liu Y. et al. RoBERTa: A Robustly Optimized BERT Pretraining Approach.|[link](https://openreview.net/forum?id=SyxS0T4tvS)||
+|Le K. H. et al. Learning from multiple expert annotators for enhancing anomaly detection in medical image analysis //IEEE Access. – 2023. – Т. 11. – С. 14105-14114.|[link](https://ieeexplore.ieee.org/abstract/document/10041153/)||
+|Achille A., Rovere M., Soatto S. Critical learning periods in deep networks //International conference on learning representations. – 2018.|[link](https://openreview.net/forum?id=BkeStsCcKQ)||
+|Baehrens D. et al. How to explain individual classification decisions //The Journal of Machine Learning Research. – 2010. – Т. 11. – С. 1803-1831.|[link](http://www.jmlr.org/papers/volume11/baehrens10a/baehrens10a.pdf)||
+|Peter L. Bartlett and Marten H. Wegkamp. Classification with a reject option using a hinge loss. In JMLR, 2008.|[link](https://www.jmlr.org/papers/volume9/bartlett08a/bartlett08a.pdf)||
+|Carlini N., Erlingsson U., Papernot N. Distribution density, tails, and outliers in machine learning: Metrics and applications //arXiv preprint arXiv:1910.13427. – 2019.|[link](https://arxiv.org/abs/1910.13427)||
+|Caruana R. Case-based explanation for artificial neural nets //Artificial Neural Networks in Medicine and Biology: Proceedings of the ANNIMAB-1 Conference, Göteborg, Sweden, 13–16 May 2000. – London : Springer London, 2000. – С. 303-308.|[link](https://link.springer.com/chapter/10.1007/978-1-4471-0513-8_46)||
+|Haw-Shiuan Chang, Erik Learned-Miller, and Andrew McCallum. Active bias: Training more accurate neural networks by emphasizing high variance samples. In NeurIPS, 2017.|[link](https://proceedings.neurips.cc/paper/2017/hash/2f37d10131f2a483a8dd005b3d14b0d9-Abstract.html)||
+|Fartash Faghri, David Duvenaud, David J Fleet, and Jimmy Ba. A study of gradient variance in deep learning. arXiv, 2020.|[link](https://arxiv.org/abs/2007.04532)||
+|Tom Fawcett. An introduction to roc analysis. In Pattern recognition letters, 2006.|[link](https://www.sciencedirect.com/science/article/pii/S016786550500303X)||
