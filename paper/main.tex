@@ -1,0 +1,153 @@
+\documentclass{article}
+\usepackage{arxiv}
+
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{doi}
+
+
+
+\title{A template for the \emph{arxiv} style}
+
+\author{ David S.~Hippocampus\thanks{Use footnote for providing further
+		information about author (webpage, alternative
+		address)---\emph{not} for acknowledging funding agencies.} \\
+	Department of Computer Science\\
+	Cranberry-Lemon University\\
+	Pittsburgh, PA 15213 \\
+	\texttt{hippo@cs.cranberry-lemon.edu} \\
+	%% examples of more authors
+	\And
+	Elias D.~Striatum \\
+	Department of Electrical Engineering\\
+	Mount-Sheikh University\\
+	Santa Narimana, Levand \\
+	\texttt{stariate@ee.mount-sheikh.edu} \\
+	%% \AND
+	%% Coauthor \\
+	%% Affiliation \\
+	%% Address \\
+	%% \texttt{email} \\
+	%% \And
+	%% Coauthor \\
+	%% Affiliation \\
+	%% Address \\
+	%% \texttt{email} \\
+	%% \And
+	%% Coauthor \\
+	%% Affiliation \\
+	%% Address \\
+	%% \texttt{email} \\
+}
+\date{}
+
+\renewcommand{\shorttitle}{\textit{arXiv} Template}
+
+%%% Add PDF metadata to help others organize their library
+%%% Once the PDF is generated, you can check the metadata with
+%%% $ pdfinfo template.pdf
+\hypersetup{
+pdftitle={A template for the arxiv style},
+pdfsubject={q-bio.NC, q-bio.QM},
+pdfauthor={David S.~Hippocampus, Elias D.~Striatum},
+pdfkeywords={First keyword, Second keyword, More},
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+    While improving the performance of machine learning (ML) models, researchers assess the difficulty of objects in a dataset. There is no universally agreed-upon definition of what constitutes a difficult object. The most commonly used term is "difficulty"; although other terms such as "hardness" and "challenging cases" are also used. There are numerous methods for assessing object difficulty, ranging from traditional approaches to more recent techniques based on model training. These methods are applied in a variety of domains and to various data structures, helping to improve solutions by filtering out or re-labeling difficult objects. This paper extends these methods to the humanities, where researchers encounter inherently complex data schemas. Therefore, the use of conventional methods is complicated by the need to transform complex data into vector representations. In particular, we consider labeled text spans, for which the vector representation must take the entire context into account. To address this challenge, we study the use of language models to create vector representations of textual fragments that consider the context within the overall difficulty assessment pipeline. This yields a more accurate representation of a text's meaning and complexity, enabling a more precise estimation of the difficulty of each data instance.
+
+    \keywords{Evaluation of difficulty for individual data instances \and  Text labeling \and Digital humanities \and Machine Learning \and Natural language processing}
+\end{abstract}
+
+\section{Introduction}
+The evaluation of object complexity constitutes a critical component of data mining, as it provides insights into the performance of trained models. Identifying difficult objects is particularly valuable for the re-annotation of data and subsequent development of models. The methods employed for this assessment have evolved to encompass a broad spectrum of tasks, domains, and entities exhibiting varied characteristics.
+
+In the realm of machine learning and data analysis, various methodologies exist for evaluating the difficulty associated with individual data instances. These methodologies range from traditional statistical approaches to contemporary techniques utilising neural networks. The evaluation process is further complicated by the absence of a universally accepted definition of a "difficult object" \cite{seedat2024dissecting}, which has led to diverse interpretations among researchers.
+
+The terminology surrounding this concept remains contentious, with some scholars referring to such objects as "challenging" or "atypical," while others prefer the term "difficult." Nonetheless, "difficulty" appears to be the most widely endorsed designation within the literature ~\cite{agarwal2022estimating}. 
+
+The application of these machine learning techniques within the humanities is complicated by the need for precise knowledge formalisation. For instance, nested data are characterized by a hierarchical or multilevel structure, that is, are organized at more than one level. In neuroscience synapses (level 1) are organized, or nested, in cells (level 2) \cite{aarts2014solution}. The annotation of multiple spans in content analysis enhances the identification of human values in textual data \cite{10893762}, \cite{rink2024detecting}, \cite{vorontsov2025detecting}.
+
+Within the framework of nested data models adopted for this study, analysis is confined to the span level and the element level, where elements comprise multiple spans. This framework was developed based on existing datasets and comprises a sequence of text markup data models that are nested within one another, aligning with varying levels of markup complexity. 
+
+\begin{description}
+    \item[First sub-level of level of spans] At this level, each document contains only a single markup, which is composed of spans. Each span is designated with only one tag, commonly referred to as a SpanTag. This structure aligns with many classical datasets characterised by simplicity. These datasets are predominantly utilised in Named Entity Recognition (NER) tasks. An example of such a dataset is the Kaggle NER Corpus~\cite{kagglener}.
+    \item[Second sub-level of level of spans] At this level, a document may feature multiple annotations, introducing the concept of multi-assessority. Each span can be assigned zero or more tags; the absence of tags indicates that all spans within the dataset share the same tag, which is therefore omitted. Conversely, the presence of multiple tags corresponds to scenarios of multi-label classification or a complex hierarchical structure within the tagging system. For example, the RuSentNE dataset \cite{rusentne} assigns both Named Entity Recognition (NER) tags and sentiment tags to each span.
+    \item[Level of elements] At this level, each annotation comprises elements rather than spans, with an element being defined as a set of spans. The interpretation of elements may vary across different datasets. Each element is also assigned tags (ElementTag). Typical instances of elements include coreference clusters, which pertain to the coreference resolution task, as well as relations, frames, and multi-fragments \cite{10893762}. Examples of datasets featuring elements include the Ruethics and RWSD tasks from the MERA project \cite{fenogenova-etal-2024-mera}, as well as the ADE dataset \cite{ade}, NEREL \cite{nerel}, RURED \cite{rured}, the RWSD task from RuSuperGlue, SCIERC \cite{scierc}, and SemEval 2010 task 8 \cite{hendrickx2019semeval}. These datasets not only include individual spans but also incorporate the relationships between them and/or coreference clusters.
+\end{description}
+
+In this article, we focus on the span level of a chain of nested data models, considering the text spans along with their corresponding tags as entities for difficulty assessment. The application of traditional methods to evaluate the difficulty of objects within a chain of nested data models encounters several challenges, including the phenomenon of multi-assessment and the necessity of data vectorization. This article will explore strategies to surmount these obstacles.
+
+Firstly, we propose integrating assessor consistency into the loss function~\cite{le2023learning}, thereby ensuring that the model is trained to yield reliable results across various assessors. Secondly, we advocate for the utilisation of language models to generate vector representations of text spans (\cite{joshi2020spanbert}, \cite{eberts2020span}, \cite{toshniwal2020cross}) and their contexts. This approach will aid in capturing the semantic essence of the text, facilitating easier comparisons between distinct objects.
+
+The authors of considered articles about difficulty demonstrate varying interpretations of the concept of object difficulty. In this paper \textbf{the difficulty of an object refers to the complexity encountered by a machine learning model when processing that object in a specific task}. We focus exclusively on model-specific and task-specific methods since we consider text's span with single tag as object the current task is the span classification. Besides that, model specificity entails the need for training span classifier.
+
+\section{Related works}
+Methods for assessing the difficulty have been addressed in a limited number of publications, such as the work by Seedat et al. (2024), which we have referenced above. We have drawn upon the mathematical and methodological foundations underlying these methods:
+
+\begin{itemize}
+    \item Inclusion of distribution support estimation
+    \item Inclusion of distribution density estimation for the object (or its features)
+    \item Utilisation of reconstruction error as a measure of object difficulty
+    \item Task-agnosticism (It is important to note that, in most instances, the task-agnostic nature of a method is directly related to the absence of a labelled or target feature for the object)
+    \item Model-agnosticism
+    \item Computation of statistics for a trained model (with respect to its layers; we focus here on model-specific approaches)
+    \item Generation of (pseudo)difficult objects (for the purposes of training or validation).
+\end{itemize}
+
+The overview is presented in the Tables \ref{tab:system} and \ref{tab:system2}, respectively, for the articles under consideration and for the methods from scikit-learn. Additionally, we have also systematized the margin-based approach that is task- and model-specific.
+
+\begin{table}[t]
+    \centering
+    \caption{Considered articles}\label{tab:system}
+    \begin{tabular}{|p{6cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.6cm}|p{0.6cm}|}
+       \hline Article & \rotatebox{90}{\shortstack{Support\\ estimation}} & \rotatebox{90}{\shortstack{Distribution\\ estimation}} & \rotatebox{90}{\shortstack{Recon-\\struction}} & \rotatebox{90}{\shortstack{Task-\\agnostic}} & \rotatebox{90}{\shortstack{Model-\\agnostic}} & \rotatebox{90}{\shortstack{Statistics}} & \rotatebox{90}{\shortstack{Generation}} \\ \hline
+       Support vector data description~\cite{article} & \text{\checkmark} & & & \text{\checkmark} & \text{\checkmark} & & \\ \hline  
+       Task-agnostic out-of-distribution detection using kernel density estimation~\cite{erdil2021task} &  & \text{\checkmark} & & \text{\checkmark} & & \text{\checkmark} &\\ \hline
+       Robust, deep and inductive anomaly detection~\cite{chalapathy2017robust} & & & \text{\checkmark} & \text{\checkmark} & \text{\checkmark} & &\\ \hline
+       A simple unified framework for detecting out-of-distribution samples and adversarial attacks~\cite{Lee2018ASU} & & \text{\checkmark} & & & & \text{\checkmark} &\\ \hline
+       Deep semi-supervised anomaly detection~\cite{ruff2019deep} & \text{\checkmark} & & & \text{\checkmark} & \text{\checkmark} & &\\ \hline
+       Rapp: Novelty detection with reconstruction along projection pathway~\cite{kim2019rapp} & & & \text{\checkmark} & \text{\checkmark} & & \text{\checkmark} &\\ \hline
+       Unsupervised anomaly detection with generative adversarial networks to guide marker discovery~\cite{inproceedings} & & & & \text{\checkmark} & \text{\checkmark} & & \\ \hline
+       Estimating example difficulty using variance of gradients~\cite{agarwal2022estimating} & & & & & & \text{\checkmark} &\\ \hline
+       Grod: Enhancing generalization of transformer with out-of-distribution detection~\cite{zhou2024grod} & \text{\checkmark} & & & & & \text{\checkmark} & \text{\checkmark}\\ \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \caption{Considered functions of sklearn}\label{tab:system2}
+    \begin{tabular}{|p{6cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.6cm}|p{0.6cm}|}
+       \hline Function & \rotatebox{90}{\shortstack{Support\\ estimation}} & \rotatebox{90}{\shortstack{Distribution\\ estimation}} & \rotatebox{90}{\shortstack{Recon-\\struction}} & \rotatebox{90}{\shortstack{Task-\\agnostic}} & \rotatebox{90}{\shortstack{Model-\\agnostic}} & \rotatebox{90}{\shortstack{Statistics}} & \rotatebox{90}{\shortstack{Generation}} \\ \hline
+       One Class SVM & \text{\checkmark} & & & \text{\checkmark} & \text{\checkmark} & & \\ \hline  
+       Elliptic envelope & & \text{\checkmark} & & \text{\checkmark} & \text{\checkmark} & &\\ \hline
+       Isolation forest & & & & \text{\checkmark} & \text{\checkmark} & &\\ \hline
+       Local outlier factor & & & & \text{\checkmark} & \text{\checkmark} & &\\ \hline
+    \end{tabular}
+\end{table}
+
+All the methods discussed rely on vectorised objects as input, along with their accompanying labels.
+
+Furthermore, when employing these methods directly, the assessment of difficulty is typically conducted on the entire dataset without exception, with the notable exception of the article by Lee et al. (2018)~\cite{Lee2018ASU}, which utilised a validation dataset containing previously known complex objects to refine hyperparameters (utilising objects from alternative datasets). In instances where pseudo-difficult objects (or pseudo-outliers) were employed, these were generated automatically using noise or an algorithm akin to that described in Zhou et al. (2024)~\cite{zhou2024grod}. In other scenarios, the authors resorted to unsupervised learning methods or abstained from any training altogether, merely calculating statistics derived from pre-trained models.
+
+In contrast, when evaluating the efficacy of these algorithms, the authors relied on previously acknowledged difficult objects, either by employing alternative datasets or by designating one class as complex or noisy, subsequently excluding it during the training phase, or by using explicit annotations.
+
+Since we consider model-specific and task-specific difficulty, this article will further examine the works of Lee et al. (2018)~\cite{Lee2018ASU}, Agarwal et al. (2022)~\cite{agarwal2022estimating}, and the margin-based approach.
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\end{document}
