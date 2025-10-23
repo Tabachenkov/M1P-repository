@@ -14,6 +14,8 @@
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{doi}
+\usepackage{multicol}
+\usepackage{multirow}
 
 
 
@@ -170,6 +172,13 @@ According to~\cite{le2023learning}, the incorporation of confidence scores into 
 \subsection{Span vectorisation}\label{span-vec}
 There exists a variety of methods for deriving vector representations of spans through the use of language models. In the majority of instances involving spans, aggregation functions are utilised (which are used to aggregate vector representations of tokens in spans). Examples of such methodologies are detailed in the following studies: ~\cite{joshi2020spanbert} (which discusses the application of boundary tokens and positional embeddings for spans' lengths), ~\cite{eberts2020span} (which explores max pooling along with positional embeddings of spans' lengths), and ~\cite{toshniwal2020cross} (where the authors examined six distinct methods: average pooling, attention pooling, max pooling, endpoint, diff-sum, and coherent). We note, that in different tasks such methods may have different levels of success. 
 
+\subsection{Margin-based approach}
+We further propose a methodological approach that, although classical in nature, has received scant attention in the extant research. Let us consider a model trained on the multi-class classification task: $a(x) = \arg\max\limits_{y \in Y}g_y(x),$ where $g_y(\cdot)$ is a discriminant function corresponding to the class $y \in Y$ (for example, a set of such discriminant functions can be a pre-softmax layer in a neural network). Let $\hat{y}$ be a true class of object $x$. Then we introduce $M_y(x) = g_{\hat{y}}(x) - g_y(z)$ - \emph{margin} of object $x$ by class $y$. Then the (total) \emph{margin} of object $x$ is $M(x) = \min\limits_{y \neq \hat{y}}M_y(x)$.
+
+The margin is deemed to be positive if and only if the object is accurately classified. The absolute value of the margin can be interpreted as an indicator of the model's confidence in its prediction.
+
+Consequently, when the margin is significantly less than zero, the object is regarded as an outlier in relation to the model (indicating that the model has made an error, albeit with a degree of certainty). A small absolute value of the margin may suggest that the model is not fully trained or that the object poses a challenge to the model, preventing it from making a confident decision.
+
 \section{Problem statement}
 Let we have text $T = \{\tau_1, ..., \tau_l\}$, where $\tau_i$ is a token (tokenization corresponds to the considered tokenizer) and its text span $s = \{\tau_{begin}, ..., \tau_{end}\}$ with the SpanTag $y \in Y$. Thus, we consider triplet $(T, (begin, end), y)$.
 
@@ -178,6 +187,148 @@ It is required to estimate the difficulty of these spans with tags $DiffScore: X
 If $D_{non-diff}$ is the set of nominal non-difficult objects and $D_{diff}$ is the set of nominal difficult objects then the quality criterion is a ROC-AUC~\cite{fawcett2006introduction} applied to difficulty scores of objects, considering objects from $D_{non-diff}$ as negative and objects from $D_{diff}$ as positive~\ref{diff}.  
 
 Let $ConfScore: X \rightarrow [0,1]$ be the confidence score of pair span-tag~\ref{multi-assessor}. Then we also check hypothesises that $ConfScore$ correlates with $DiffScore$ and that objects with lower confidence scores have higher difficulty scores.
+
+\section{Adaptation of methods}
+
+\subsection{Vectorization}
+In this article, we focus exclusively on spans, which correspond to the span level within a chain. It has been previously noted that most methods for assessing difficulties operate using vector representations of objects. Consequently, we employed Large Language Model (LLM) frameworks to vectorise texts, tokens, and spans~\ref{span-vec}. 
+
+Let us have text $T = \{\tau_1, ..., \tau_l\}$, where $\tau_i$ is a token (tokenization corresponds to the LLM's tokenizer). Let $M$ be the transformer-based language model that vectorizes considered texts: $M(\{\tau_1, ..., \tau_l\}) = \{e_1, ..., e_l\}$, where $e_i$ is the embedding of $i$-th token from the space of meanings $E$. Let us consider span $s = \{\tau_{begin}, ..., \tau_{end}\} \subset T$. It's proposed to extract vector representation of span $s$ using aggregation of embeddings of corresponding tokens: $A(\{e_{begin}, ..., e_{end}\}) = e^s$, where $e^s$ is the embedding of span $s$, $A$ is the aggregation function.
+
+The vector representations of spans can subsequently be submitted to the classifier. In the current dataset, where each span is associated with only one SpanTag (at the level of spans from the chain), the classifier is trained to perform a multi-class classification task. Given the available SpanTags $tag_1, ..., tag_b$, the classifier returns a probability distribution over the corresponding tags: $(p_1, ..., p_b, p_{o})$, where $p_i \geq 0; p_o \geq 0; p_o + \sum_{i=1}^bp_i = 1$ and $p_i$ denote the probability that span $s$ is labeled with $tag_i$", and $p_o$ represents the probability that the span is not labeled with any of the tags $tag_i$". The final probability corresponds to the special tag "Other". Although this tag is absent from most datasets, it has been incorporated here to explicitly indicate instances where a span demarcated by the specified boundaries is not represented in the document's markups.
+
+Subsequently, methods for assessing difficulty can be applied to the vector representations of spans and the classifier mentioned above.
+
+\subsection{Multi-assessorship}
+To adapt difficulty assessment methods to multi-assessor document markups, it is proposed to use an approach similar to that described in section~\ref{multi-assessor} aggregating similar spans and calculating their confidence (or consistency) scores which can be used as weights of spans in cross-entropy loss used to train span classifier. 
+
+Moreover, certain peculiarities emerge when attempting to measure the confidence scores of "span-tag" pairs, which we also address in this discussion. To begin with, in the aforementioned article, the authors utilised scores related to assessors’ reliabilities. However, as previously noted, lower levels of multi-assessorship, including the second sub-level at the span level, are characterised by a lack of known assessors. We propose addressing this issue by assuming uniform reliability scores for all anonymous assessors responsible for document markups.
+
+Additionally, an arbitrary document may have a varying number of markups. To accommodate this, we adaptively adjust the parameters \(N\) and \(c_0\) (as defined in the previous formula) in accordance with the increasing number of markups within a document, potentially considering the ratio of \(T\) to the total number of markups pertinent to the current document.
+
+Finally, a pertinent question arises regarding which objects' difficulty within the chain we should assess and the methodology employed in this assessment. The Intersection over Union (IoU) score and average aggregation methods may also be applicable when processing fragments analogous to those associated with the previously considered bounding boxes.
+
+In summary, we propose an adaptation to multi-assessorship as follows: firstly, we will define clusters of spans by utilising the IoU score as a measure of span similarity. The IoU score is computed based on the boundaries of spans:
+$$IoU(\{\tau_{begin_1}, ..., \tau_{end_1}\}, \{\tau_{begin_2}, ..., \tau_{end_2}\}) = \begin{cases}
+0, begin_1 \geq end_2 \\
+0, begin_2 \geq end_1 \\
+\frac{min(end_1, end_2) - min(begin_1, begin_2)}{max(end_1, end_2) - max(begin_1, begin_2)}, other
+\end{cases}$$
+Next, for each cluster, we calculate the consensus span by averaging the beginning and ending indices. In addition, we compute a confidence score for each pair of cluster and tag, where the tag is present within the spans of the clusters: $ConfScore(C_{tag}) = \frac{|C_{tag}|}{|Markups_{doc}|}$, where $C_{tag}$ denotes the set of spans within a cluster that have a specific tag, and $Markups_{doc}$ represents the set of all markups within the document. We have taken into account that within a single cluster, all spans originate from different markups, as spans within a single markup cannot intersect in the datasets under consideration. 
+
+Further in the text, objects with high confidence scores (greater than 0.7) will be called \emph{consistent}, objects will low confidence scores (less than 0.7) will be called \emph{inconsistent}. Besides that, we introduce an \emph{uncertainty score} $UncerScore(\cdot) = 1-ConfScore(\cdot)$.
+
+\section{Experiments}
+This study is also extended to an evaluation of the performance of various difficulty assessment methods using real-world data from our collection. The following outlines the procedures undertaken for data preprocessing, language model training, validation of the difficulty assessment methods, hypothesis checking, and the interpretability of the difficulty scores:
+
+Data Preprocessing:
+\begin{itemize}
+\item The datasets were transformed into a span-level data model, moving away from the chain-based structure.
+\end{itemize}
+
+Language Model Training and Validation:
+\begin{itemize}
+\item A single dataset was selected to serve as the primary reference.
+\item The model architecture was implemented according to the methodologies outlined in the vectorisation section, employing a span embedder coupled with a classifier at the output layer.
+\item Both training and validation procedures were conducted on this primary dataset, integrating the precomputed confidence scores from the assessors.
+\end{itemize}
+
+Validation of Difficulty Assessment Methods:
+\begin{itemize}
+\item The efficacy of the difficulty assessment methods was evaluated using methodologies aligned with those found in the established literature.
+\item Non-difficult objects were identified within the primary dataset, while the remaining datasets were used to source (pseudo)difficult objects.
+\item Furthermore, a technique that introduces noise to fragment embeddings was employed for additional assessment.
+\item The performance of the various methods was compared on this corpus of (pseudo)difficult data. Specifically, four distinct methods were validated: Variance of gradients~\cite{agarwal2022estimating}, Gaussian method~\cite{Lee2018ASU}, Margin-based approach, A variant of the margin-based approach utilising absolute values of margins.
+\end{itemize}
+
+\subsection{Data preprocessing}
+We examined two datasets: the Kaggle NER Corpus~\cite{kagglener} and the ADE datasets ~\cite{ade}. The Kaggle NER Corpus was selected as primary as it directly aligns with the specific challenge of span identification and classification. In contrast, the ADE datasets served for validating our methods of assessing difficulty.
+
+\subsubsection{Kaggle NER Corpus}
+This dataset~\cite{kagglener} represents the level of span annotations. Notably, spans do not overlap within a single markup due to the authors employing BIO notation. In our approach, we opted to convert this dataset to the level of the spans data model to consider text spans with tags.
+
+The dataset includes 8 distinct tags in addition to a special "Other" tag: "art" (artifact), "eve" (event), "geo" (geographical object), "gpe" (geo-political entity), "nat" (natural phenomenon), "org" (organization), "per" (person), and "tim" (time). This clearly positions the dataset within the realm of Named Entity Recognition (NER) tasks.
+
+\subsubsection{ADE}
+The dataset described in~\cite{ade} consists of two subsets: the first includes drug-dosage pairs with 501 documents, while the second contains drug-effect pairs comprising 10,959 documents. A streamlined data model representing this dataset is structured around the elements of a chain, treating the relations of drug-dosage and drug-effect as individual elements. However, due to the focus on spans, the dataset has been refined to the level of spans, wherein each markup is associated with all spans found within the existing element-relations.
+
+In contrast, the documents in the ADE dataset are biomedical in nature, whereas the Kaggle NER Corpus~\cite{kagglener} consists of texts related to news and politics. In evaluating the complexity of the objects based on a model trained on the Kaggle corpus, this significant difference suggests that the biomedical spans from the ADE dataset are inherently more challenging to model. Consequently, methods designed for difficulty assessment should assign higher scores to the objects from the ADE dataset.
+
+\subsection{Language model training and validation}
+We used BERT model~\cite{devlin2019bert} and DeBERTa model~\cite{hedeberta} as the language models ($\mathcal{M}$) for their efficacy in generating token vector representations. We also considered all 6 main aggregation methods from~\cite{toshniwal2020cross}. Besides that, we considered SpanBERT~\cite{joshi2020spanbert} model with endpoint aggregation. A Multi-Layer Perceptron (MLP) with two linear layers and GeLU~\cite{gelu} as activation was served as the classifier. To enhance the quality and generalisability of the derived span embeddings, specific layers of the language models were unfrozen during training.
+
+The training set consisted of approximately 5,000 texts from the Kaggle NER Corpus~\cite{kagglener}, with a further 2,000 texts allocated for validation. A strict separation was maintained between training and validation documents to preclude any data leakage. For both phases, the input was formatted as a triplet $(T, (begin, end), tag)$, where $T$ denotes the text, $(begin, end)$ defines the span boundaries, and $tag$ specifies the label—either "Other" or one of the eight predefined NER tags. It is noteworthy that while these tags do not directly influence the model's internal mechanics, they are fundamental to the computation of the loss function during classifier training and, by extension, the formation of the span vector representations.
+
+As the Kaggle NER dataset~\cite{kagglener} does not inherently include an "Other" tag for spans, a negative sampling procedure was implemented. To generate triplets of the form $(T, (begin, begin+l), Other)$, the distribution of span lengths, denoted $U_{len}$, was first estimated from the training documents. A length $l$ was sampled from $U_{len}$, and a starting index $begin$ was drawn from a uniform distribution $U[0, L-l]$, where $L$ signifies the total number of tokens in text $T$.
+
+During training, negative samples were regenerated anew for each epoch, producing one sample per training document. For the validation set, negative samples were generated once and held fixed, also comprising one sample per document. The training and validation sets are denoted as $D_{train}$ and $D_{val}$, respectively.
+
+The training routine was conducted over three epochs using the AdamW optimiser~\cite{loshchilov2017fixing} and a cross-entropy loss function. We also used gradient clipping~\cite{zhanggradient} and warmupm scheduling~\cite{kalra2024warmup} for more stable and accelerated learning. Validation was performed every 500 training iterations to identify the optimal model based on performance metrics. The results of this validation are presented in Tab.~\ref{tab:val}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Validation of language model}\label{tab:val}
+    \begin{tabular}{|c|c|c|c|c|} 
+        \hline
+        Encoder and method & Accuracy & Precision-Macro & Recall-Macro & F1-micro \\ \hline
+        BERT + mean & 0.887	 & 0.761 & 0.699 & 0.720 \\ \hline	 
+        BERT + attention & 0.900 & 0.652 & 0.648 & 0.650 \\ \hline
+        BERT + max pooling & 0.914&0.717&0.647&0.667 \\ \hline
+        BERT + endpoint & 0.915&0.750&0.663&0.689\\ \hline
+        BERT + diff-sum &0.914&0.761&0.701&0.724\\ \hline
+        BERT + coherent &0.914&0.788&0.702&0.732\\ \hline
+        DeBERTa + mean &0.899&0.705&0.640&0.657\\ \hline
+        DeBERTa + attention &0.898&0.704&0.614&0.624\\ \hline
+        DeBERTa + max pooling &0.915&0.716&0.646&0.666\\ \hline
+        DeBERTa + endpoint &0.917&0.810&0.704&0.739\\ \hline
+        DeBERTa + diff-sum &\textbf{0.919}&\textbf{0.812}&\textbf{0.705}&\textbf{0.740}\\ \hline
+        DeBERTa + coherent &0.916&0.701&0.656&0.671\\ \hline
+        SpanBERT + endpoint &0.911&0.714&0.618&0.631\\ \hline
+    \end{tabular}
+\end{table}
+
+The best results are achieved by using DeBERTa and diff-sum (or endpoint) aggregation.
+
+\subsection{Validation of methods assessing difficulty}
+
+
+The validation of the considered methods was conducted in a manner analogous to the approach detailed in the article on gradient variance~\cite{agarwal2022estimating}. Two distinct sets were defined: \(D_{non-diff}\), comprising non-difficult spans, and \(D_{diff}\), containing difficult spans. It is noteworthy that all four methods under examination, in common with numerous other approaches, are score-based. Consequently, the ROC-AUC metric was employed to evaluate the efficacy of each method in distinguishing between the pair \((D_{non-diff}, D_{diff})\). This metric can be interpreted as the probability that a non-difficult object will receive a lower difficulty score than a difficult one.
+
+The validation set \(D_{val}\) was designated as the source of nominal non-difficult objects. Three variants of the set \(D_{diff}\) were constructed to represent nominal difficult objects: a noisy set \(D_{noise}\), a subset \(D_{dd}\) from the ADE dataset featuring drug-dosage pairs, and a further subset \(D_{de}\) from ADE containing drug-effect pairs. The noisy set was generated by introducing Gaussian noise to the embeddings of spans from \(D_{val}\); his noise was synthesised randomly from a normal distribution for each span prior to model training and validation. Spans from the ADE dataset were labelled with the "Other" tag, whereas the noisy spans retained their original corresponding labels.
+
+The variance of gradients method~\cite{agarwal2022estimating} was applied to all four sets (\(D_{val}\), \(D_{noise}\), \(D_{dd}\), \(D_{de}\)) at 500-iteration intervals, concurrent with the validation of the language model. The variances computed at these checkpoints served as the difficulty scores.
+
+The margin-based approach and the Gaussian method~\cite{Lee2018ASU} were applied to the best-performing model version following the completion of training. For the margin-based method, two alternative calculations for the difficulty score were investigated: \(DiffScore(x) = -M(x)\), where difficult objects correspond to lower margins, and \(DiffScore(x) = -|M(x)|\), where difficult objects are those exhibiting low absolute margin values. Here, \(x\) denotes a triplet \((T, (begin, end), tag)\) as previously defined. The Gaussian method utilised the Mahalanobis distance to compute the difficulty score. The mean \(\mu_c\) and covariance matrix \(\Sigma\) were derived from the embeddings of the training spans prior to their processing by the classifier layer of the optimal model.
+
+Results from the validation are provided in Table~\ref{tab:diff_val}. The best results on ADE datasets as difficult sets are achieved with the Gaussian method. This is probably because the language models under consideration are able to separate well the vector representations of tokens and texts from different domains. Besides that, usage of BERT increased quality of difficulty assessing methods on ADE datasets for all aggregation methods. 
+
+If we consider Noisy dataset as difficult then Gaussian method has very higher ROC-AUC than other difficulty assessing methods for almost all models. However, when using the Gaussian method, the ROC-AUC is less than 0.5 if we use max pooling and coherent aggregations. Thus, usage of noise in difficulty assessing methods validation is less robust than using natural difficult objects.
+
+\begin{table}[!htb]
+    \centering
+    \caption{ROC-AUC for difficulty assessing methods applied to different difficult datasets}\label{tab:diff_val}
+    {
+    \tiny
+    \begin{tabular}{|c|*{12}{c|}}
+    \hline
+    \multirow{2}{*}{\textbf{Encoder + method}} & \multicolumn{4}{c|}{\textbf{Noisy dataset}} & \multicolumn{4}{c|}{\textbf{Drug-dosage}} & \multicolumn{4}{c|}{\textbf{Drug-effect}} \\ \cline{2-13}
+    & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. \\ \hline
+    BERT + mean & 0.563 & 0.584 & 0.590 & 0.999 & 0.737 & 0.766 & 0.802 & 0.948 & 0.694 & 0.698 & 0.732 & 0.933 \\ \hline
+    BERT + attention & 0.542 & 0.571 & 0.573 & 0.999 & 0.796 & 0.830 & \textbf{0.846} & 0.953 & 0.758 & 0.783 & 0.801 & 0.936 \\ \hline
+    BERT + max pooling & 0.560 & 0.594 & 0.593 & 0.456 & 0.855 & 0.826 & 0.820 & 0.958 & 0.863 & 0.841 & \textbf{0.828} & 0.950 \\ \hline
+    BERT + endpoint & 0.581 & 0.610 & 0.610 & \textbf{1.000} & 0.826 & 0.830 & 0.801 & 0.960 & 0.842 & 0.788 & 0.764 & 0.957 \\ \hline
+    BERT + diff-sum & 0.571 & 0.611 & 0.610 & \textbf{1.000} & \textbf{0.869} & \textbf{0.865} & 0.805 & \textbf{0.967} & 0.856 & \textbf{0.863} & 0.808 & \textbf{0.965} \\ \hline
+    BERT + coherent & 0.546 & 0.605 & 0.603 & 0.472 & 0.848 & 0.845 & 0.806 & 0.935 & \textbf{0.867} & 0.852 & 0.810 & 0.925 \\ \hline
+    DeBERTa + mean & 0.578 & 0.598 & 0.599 & 0.999 & 0.762 & 0.742 & 0.779 & 0.935 & 0.767 & 0.683 & 0.716 & 0.925 \\ \hline
+    DeBERTa + attention & \textbf{0.617} & 0.603 & 0.606 & 0.999 & 0.572 & 0.818 & 0.842 & 0.945 & 0.539 & 0.759 & 0.769 & 0.921 \\ \hline
+    DeBERTa + max pooling & 0.572 & 0.613 & 0.613 & 0.424 & 0.839 & 0.807 & 0.796 & 0.910 & 0.846 & 0.780 & 0.751 & 0.891 \\ \hline
+    DeBERTa + endpoint & 0.553 & 0.616 & 0.616 & \textbf{1.000} & 0.800 & 0.831 & 0.767 & 0.941 & 0.827 & 0.837 & 0.752 & 0.937 \\ \hline
+    DeBERTa + diff-sum & 0.580 & \textbf{0.616} & \textbf{0.616} & \textbf{1.000} & 0.845 & 0.809 & 0.781 & 0.913 & 0.835 & 0.831 & 0.789 & 0.920 \\ \hline
+    DeBERTa + coherent & 0.571 & 0.609 & 0.608 & 0.448 & 0.805 & 0.830 & 0.712 & 0.900 & 0.801 & 0.815 & 0.685 & 0.873 \\ \hline
+    SpanBERT + endpoint & 0.560 & 0.612 & 0.611 & \textbf{1.000} & 0.841 & 0.848 & 0.725 & 0.955 & 0.864 & 0.846 & 0.695 & 0.946 \\ \hline
+    \end{tabular}
+    }
+\end{table}
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
