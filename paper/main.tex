@@ -16,7 +16,8 @@
 \usepackage{doi}
 \usepackage{multicol}
 \usepackage{multirow}
-
+\usepackage[normalem]{ulem}
+\usepackage{bm}
 
 
 \title{Assessing the Difficulty of Spans Within Nested Text Markup Data Models}
@@ -108,7 +109,7 @@ The overview is presented in the Tables \ref{tab:system} and \ref{tab:system2}, 
 
 \begin{table}[t]
     \centering
-    \caption{Considered articles}\label{tab:system}
+    \caption{Considered articles and their correspondences to characteristics}\label{tab:system}
     \begin{tabular}{|p{6cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.6cm}|p{0.6cm}|}
        \hline Article & \rotatebox{90}{\shortstack{Support\\ estimation}} & \rotatebox{90}{\shortstack{Distribution\\ estimation}} & \rotatebox{90}{\shortstack{Recon-\\struction}} & \rotatebox{90}{\shortstack{Task-\\agnostic}} & \rotatebox{90}{\shortstack{Model-\\agnostic}} & \rotatebox{90}{\shortstack{Statistics}} & \rotatebox{90}{\shortstack{Generation}} \\ \hline
        Support vector data description~\cite{article} & \text{\checkmark} & & & \text{\checkmark} & \text{\checkmark} & & \\ \hline  
@@ -125,7 +126,7 @@ The overview is presented in the Tables \ref{tab:system} and \ref{tab:system2}, 
 
 \begin{table}[t]
     \centering
-    \caption{Considered functions of sklearn}\label{tab:system2}
+    \caption{Considered functions of sklearn and their correspondences to characteristics}\label{tab:system2}
     \begin{tabular}{|p{6cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.8cm}|p{0.6cm}|p{0.6cm}|}
        \hline Function & \rotatebox{90}{\shortstack{Support\\ estimation}} & \rotatebox{90}{\shortstack{Distribution\\ estimation}} & \rotatebox{90}{\shortstack{Recon-\\struction}} & \rotatebox{90}{\shortstack{Task-\\agnostic}} & \rotatebox{90}{\shortstack{Model-\\agnostic}} & \rotatebox{90}{\shortstack{Statistics}} & \rotatebox{90}{\shortstack{Generation}} \\ \hline
        One Class SVM & \text{\checkmark} & & & \text{\checkmark} & \text{\checkmark} & & \\ \hline  
@@ -159,7 +160,14 @@ In practice, it is not uncommon for situations to arise where the texts within a
 
 Firstly, we advocate for the utilisation of multiple markups of individual objects through the implementation of specialised loss functions during training, alongside various forms of consistency and consensus. An example of such an approach is articulated in article~\cite{le2023learning}.
 
-In that article, the authors examined the task of segmentation using bounding boxes and explored the classification of these boxes. For each image, they organised similar bounding boxes—derived from different markups of the images—into clusters based on the Intersection over Union (IoU) score. Subsequently, for each cluster, the authors computed an averaged bounding box, taking into account the reliability weights assigned to the assessors. For the computed bounding box and each class \( k \in \{1, \ldots, K\} \), the authors calculated a confidence score denoted by:
+In that article, the authors examined the task of segmentation using bounding boxes and explored the classification of these boxes. For each image, they organised similar bounding boxes—derived from different markups of the images—into clusters based on the Intersection over Union (IoU) score: 
+
+$$IoU((begin_{x,1}, end_{x,1}, begin_{y,1}, end_{y,1}), (begin_{x,2}, end_{x,2}, begin_{y,2}, end_{y,2}) = \frac{IntersectionArea}{Area_1 + Area_2 - IntersectionArea}$$
+$$IntersectionArea = (min(end_{x,1}, end_{x,2}) - max(begin_{x,1}, begin_{x,2}))(min(end_{y,1}, end_{y,2}) - max(begin_{y,1}, begin_{y,2}))$$
+$$Area_1 = (end_{x,1}-begin_{x,1})(end_{y,1}-begin_{y,1})$$
+$$Area_2 = (end_{x,2}-begin_{x,2})(end_{y,2}-begin_{y,2})$$
+
+Subsequently, for each cluster, the authors computed an averaged bounding box, taking into account the reliability weights assigned to the assessors. For the computed bounding box and each class \( k \in \{1, \ldots, K\} \), the authors calculated a confidence score denoted by:
 
 \[
 c_k = c_0 \min(T, N),
@@ -241,6 +249,24 @@ Validation of Difficulty Assessment Methods:
 \item The performance of the various methods was compared on this corpus of (pseudo)difficult data. Specifically, four distinct methods were validated: Variance of gradients~\cite{agarwal2022estimating}, Gaussian method~\cite{Lee2018ASU}, Margin-based approach, A variant of the margin-based approach utilising absolute values of margins.
 \end{itemize}
 
+Correlations between difficulty assessing methods:
+\begin{itemize}
+\item For each pair of difficulty assessing methods the rank correlation was calculated between corresponding difficulty scores of objects from validation set.
+\end{itemize}
+
+Interpretability of Difficulty Assessment Methods:
+\begin{itemize}
+\item The various difficulty assessment methods were applied to objects from the primary dataset to evaluate the interpretability of the high difficulty scores obtained.
+\end{itemize}
+
+Connection between difficulty and consistency:
+\begin{itemize}
+\item In this experiment the connection between high model-specific difficulty and low consistency of objects was explored.
+\item Firstly, for each difficulty assessing methods the rank correlation was calculated between difficulty scores and uncertainty scores of objects.
+\item Secondly, we applied ROC-AUC to difficulty scores of validation set's objects, considering consistent objects as negative ones and inconsistent objects as positive ones.
+\item Thirdly, the Kolmogorov-Smirnov test was used to check whether difficulty scores of consistent and inconsistent objects are from the same distribution or not.
+\end{itemize}
+
 \subsection{Data preprocessing}
 We examined two datasets: the Kaggle NER Corpus~\cite{kagglener} and the ADE datasets ~\cite{ade}. The Kaggle NER Corpus was selected as primary as it directly aligns with the specific challenge of span identification and classification. In contrast, the ADE datasets served for validating our methods of assessing difficulty.
 
@@ -249,13 +275,35 @@ This dataset~\cite{kagglener} represents the level of span annotations. Notably,
 
 The dataset includes 8 distinct tags in addition to a special "Other" tag: "art" (artifact), "eve" (event), "geo" (geographical object), "gpe" (geo-political entity), "nat" (natural phenomenon), "org" (organization), "per" (person), and "tim" (time). This clearly positions the dataset within the realm of Named Entity Recognition (NER) tasks.
 
+For each document and its corresponding annotations, we implemented the algorithm outlined in the section discussing adaptation to multi-assessorship. Approximately 1\% of the documents feature multiple annotations, indicating that the vast majority of span-tag pairs are consistent.
+
+We defined span clusters using the Intersection over Union (IoU) score, adding a span to a cluster if its IoU score with the cluster's spans is at least 0.7. This threshold was selected to ensure that only genuinely similar fragments are grouped together in one cluster.
+
+This section also presents examples of inconsistent span-tag pairs, which we identify as challenging or noisy in the context of multi-assessor annotations. These examples can be found in Tab.~\ref{tab:ma_diff}. In most cases of low confidence scores, a small number of assessors likely selected an incorrect tag (indicating noisy markups), or there was disagreement among assessors regarding tag selection (reflecting difficult objects). Additionally, a small number of assessors may have highlighted the span, which could signal either assessor error or the complexity of the task.
+
+\begin{table}[t]
+    \centering
+    \caption{Difficult and noisy objects with low consistency scores}\label{tab:ma_diff}
+    \begin{tabular}{|p{9.5cm}|c|}
+    \hline
+        Document with span & Tag and score \\ \hline
+        \uwave{Leta Hong Fincher} has more. & per-0.5, org-0.5 \\ \hline
+        Last month, Lebanese officials claimed victory in the fighting, but daily firefights have continued \uwave{since then}. & tim-0.33 \\ \hline
+        \uwave{Bird flu} has killed at least 81 people in East Asia and Turkey since 2003. & nat-0.33 \\ \hline
+        \uwave{Television} reports say few onlookers turned out for a glimpse of the Prince of Wales and his long-time companion, the Duchess of Cornwall, whom he married earlier this year. & org-0.5 \\ \hline
+        Television reports say few onlookers turned out for a glimpse of the \uwave{Prince of Wales} and his long-time companion, the Duchess of Cornwall, whom he married earlier this year. & geo-0.5, per-0.5 \\ \hline
+        Television reports say few onlookers turned out for a glimpse of the Prince of Wales and his long-time companion, the \uwave{Duchess of Cornwall}, whom he married earlier this year. & geo-0.5, per-0.5 \\ \hline
+        \uwave{Muslim} separatists in Indian Kashmir are fighting for an independent Kashmir or its merger with neighbouring Pakistan. & org-0.5 \\ \hline
+    \end{tabular}
+\end{table}
+
 \subsubsection{ADE}
 The dataset described in~\cite{ade} consists of two subsets: the first includes drug-dosage pairs with 501 documents, while the second contains drug-effect pairs comprising 10,959 documents. A streamlined data model representing this dataset is structured around the elements of a chain, treating the relations of drug-dosage and drug-effect as individual elements. However, due to the focus on spans, the dataset has been refined to the level of spans, wherein each markup is associated with all spans found within the existing element-relations.
 
 In contrast, the documents in the ADE dataset are biomedical in nature, whereas the Kaggle NER Corpus~\cite{kagglener} consists of texts related to news and politics. In evaluating the complexity of the objects based on a model trained on the Kaggle corpus, this significant difference suggests that the biomedical spans from the ADE dataset are inherently more challenging to model. Consequently, methods designed for difficulty assessment should assign higher scores to the objects from the ADE dataset.
 
 \subsection{Language model training and validation}
-We used BERT model~\cite{devlin2019bert} and DeBERTa model~\cite{hedeberta} as the language models ($\mathcal{M}$) for their efficacy in generating token vector representations. We also considered all 6 main aggregation methods from~\cite{toshniwal2020cross}. Besides that, we considered SpanBERT~\cite{joshi2020spanbert} model with endpoint aggregation. A Multi-Layer Perceptron (MLP) with two linear layers and GeLU~\cite{gelu} as activation was served as the classifier. To enhance the quality and generalisability of the derived span embeddings, specific layers of the language models were unfrozen during training.
+We used BERT model~\cite{devlin2019bert} and DeBERTa model~\cite{hedeberta} as the language models $\mathcal{M}$ for their efficacy in generating token vector representations. We also considered all 6 main aggregation methods from~\cite{toshniwal2020cross}. Besides that, we considered SpanBERT~\cite{joshi2020spanbert} model with endpoint aggregation. A Multi-Layer Perceptron (MLP) with two linear layers and GeLU~\cite{gelu} as activation was served as the classifier. To enhance the quality and generalisability of the derived span embeddings, specific layers of the language models were unfrozen during training.
 
 The training set consisted of approximately 5,000 texts from the Kaggle NER Corpus~\cite{kagglener}, with a further 2,000 texts allocated for validation. A strict separation was maintained between training and validation documents to preclude any data leakage. For both phases, the input was formatted as a triplet $(T, (begin, end), tag)$, where $T$ denotes the text, $(begin, end)$ defines the span boundaries, and $tag$ specifies the label—either "Other" or one of the eight predefined NER tags. It is noteworthy that while these tags do not directly influence the model's internal mechanics, they are fundamental to the computation of the loss function during classifier training and, by extension, the formation of the span vector representations.
 
@@ -281,7 +329,7 @@ The training routine was conducted over three epochs using the AdamW optimiser~\
         DeBERTa + attention &0.898&0.704&0.614&0.624\\ \hline
         DeBERTa + max pooling &0.915&0.716&0.646&0.666\\ \hline
         DeBERTa + endpoint &0.917&0.810&0.704&0.739\\ \hline
-        DeBERTa + diff-sum &\textbf{0.919}&\textbf{0.812}&\textbf{0.705}&\textbf{0.740}\\ \hline
+        DeBERTa + diff-sum &$\bm{0.919}$&$\bm{0.812}$&$\bm{0.705}$&$\bm{0.740}$\\ \hline
         DeBERTa + coherent &0.916&0.701&0.656&0.671\\ \hline
         SpanBERT + endpoint &0.911&0.714&0.618&0.631\\ \hline
     \end{tabular}
@@ -314,20 +362,140 @@ If we consider Noisy dataset as difficult then Gaussian method has very higher R
     \multirow{2}{*}{\textbf{Encoder + method}} & \multicolumn{4}{c|}{\textbf{Noisy dataset}} & \multicolumn{4}{c|}{\textbf{Drug-dosage}} & \multicolumn{4}{c|}{\textbf{Drug-effect}} \\ \cline{2-13}
     & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. \\ \hline
     BERT + mean & 0.563 & 0.584 & 0.590 & 0.999 & 0.737 & 0.766 & 0.802 & 0.948 & 0.694 & 0.698 & 0.732 & 0.933 \\ \hline
-    BERT + attention & 0.542 & 0.571 & 0.573 & 0.999 & 0.796 & 0.830 & \textbf{0.846} & 0.953 & 0.758 & 0.783 & 0.801 & 0.936 \\ \hline
-    BERT + max pooling & 0.560 & 0.594 & 0.593 & 0.456 & 0.855 & 0.826 & 0.820 & 0.958 & 0.863 & 0.841 & \textbf{0.828} & 0.950 \\ \hline
-    BERT + endpoint & 0.581 & 0.610 & 0.610 & \textbf{1.000} & 0.826 & 0.830 & 0.801 & 0.960 & 0.842 & 0.788 & 0.764 & 0.957 \\ \hline
-    BERT + diff-sum & 0.571 & 0.611 & 0.610 & \textbf{1.000} & \textbf{0.869} & \textbf{0.865} & 0.805 & \textbf{0.967} & 0.856 & \textbf{0.863} & 0.808 & \textbf{0.965} \\ \hline
-    BERT + coherent & 0.546 & 0.605 & 0.603 & 0.472 & 0.848 & 0.845 & 0.806 & 0.935 & \textbf{0.867} & 0.852 & 0.810 & 0.925 \\ \hline
+    BERT + attention & 0.542 & 0.571 & 0.573 & 0.999 & 0.796 & 0.830 & $\bm{0.846}$ & 0.953 & 0.758 & 0.783 & 0.801 & 0.936 \\ \hline
+    BERT + max pooling & 0.560 & 0.594 & 0.593 & 0.456 & 0.855 & 0.826 & 0.820 & 0.958 & 0.863 & 0.841 & $\bm{0.828}$ & 0.950 \\ \hline
+    BERT + endpoint & 0.581 & 0.610 & 0.610 & $\bm{1.000}$ & 0.826 & 0.830 & 0.801 & 0.960 & 0.842 & 0.788 & 0.764 & 0.957 \\ \hline
+    BERT + diff-sum & 0.571 & 0.611 & 0.610 & $\bm{1.000}$ & $\bm{0.869}$ & $\bm{0.865}$ & 0.805 & $\bm{0.967}$ & 0.856 & $\bm{0.863}$ & 0.808 & $\bm{0.965}$ \\ \hline
+    BERT + coherent & 0.546 & 0.605 & 0.603 & 0.472 & 0.848 & 0.845 & 0.806 & 0.935 & $\bm{0.867}$ & 0.852 & 0.810 & 0.925 \\ \hline
     DeBERTa + mean & 0.578 & 0.598 & 0.599 & 0.999 & 0.762 & 0.742 & 0.779 & 0.935 & 0.767 & 0.683 & 0.716 & 0.925 \\ \hline
-    DeBERTa + attention & \textbf{0.617} & 0.603 & 0.606 & 0.999 & 0.572 & 0.818 & 0.842 & 0.945 & 0.539 & 0.759 & 0.769 & 0.921 \\ \hline
+    DeBERTa + attention & $\bm{0.617}$ & 0.603 & 0.606 & 0.999 & 0.572 & 0.818 & 0.842 & 0.945 & 0.539 & 0.759 & 0.769 & 0.921 \\ \hline
     DeBERTa + max pooling & 0.572 & 0.613 & 0.613 & 0.424 & 0.839 & 0.807 & 0.796 & 0.910 & 0.846 & 0.780 & 0.751 & 0.891 \\ \hline
-    DeBERTa + endpoint & 0.553 & 0.616 & 0.616 & \textbf{1.000} & 0.800 & 0.831 & 0.767 & 0.941 & 0.827 & 0.837 & 0.752 & 0.937 \\ \hline
-    DeBERTa + diff-sum & 0.580 & \textbf{0.616} & \textbf{0.616} & \textbf{1.000} & 0.845 & 0.809 & 0.781 & 0.913 & 0.835 & 0.831 & 0.789 & 0.920 \\ \hline
+    DeBERTa + endpoint & 0.553 & 0.616 & 0.616 & $\bm{1.000}$ & 0.800 & 0.831 & 0.767 & 0.941 & 0.827 & 0.837 & 0.752 & 0.937 \\ \hline
+    DeBERTa + diff-sum & 0.580 & $\bm{0.616}$ & $\bm{0.616}$ & $\bm{1.000}$ & 0.845 & 0.809 & 0.781 & 0.913 & 0.835 & 0.831 & 0.789 & 0.920 \\ \hline
     DeBERTa + coherent & 0.571 & 0.609 & 0.608 & 0.448 & 0.805 & 0.830 & 0.712 & 0.900 & 0.801 & 0.815 & 0.685 & 0.873 \\ \hline
-    SpanBERT + endpoint & 0.560 & 0.612 & 0.611 & \textbf{1.000} & 0.841 & 0.848 & 0.725 & 0.955 & 0.864 & 0.846 & 0.695 & 0.946 \\ \hline
+    SpanBERT + endpoint & 0.560 & 0.612 & 0.611 & $\bm{1.000}$ & 0.841 & 0.848 & 0.725 & 0.955 & 0.864 & 0.846 & 0.695 & 0.946 \\ \hline
     \end{tabular}
     }
+\end{table}
+
+\subsection{Correlations between difficulty assessing methods}
+
+In this experiment Spearman's rank correlation was calculated for each pair of difficulty assessing methods for each learned model. We considered only difficulty scores on objects from validation set $D_{val}$. These correlations are provided in Table~\ref{tab:diff_corr}.
+
+Variance of gradients method and margin-based methods have higher correlations with each other than correlations with the Gaussian method which analyses directly vector representations of spans. Last mentioned correlations are quite large in most cases, which indicates the interpretability of the difficulty assessing methods relative to each other, however, these correlations still differ. The highest correlations between methods are observed when using average pooling and attention pooling as aggregation methods of language models.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Correlations between different difficulty assessing methods for different models}\label{tab:diff_corr}
+    {
+    \tiny
+    \begin{tabular}{|c|*{12}{c|}}
+    \hline
+    \multirow{2}{*}{\textbf{Encoder + method}} & \multicolumn{3}{c|}{\textbf{VoG}} & \multicolumn{3}{c|}{\textbf{$-M(x)$}} & \multicolumn{3}{c|}{\textbf{$-|M(x)|$}} & \multicolumn{3}{c|}{\textbf{Gaussian}}\\ \cline{2-13}
+    & $-M(x)$ & $-|M(x)|$ & Gaus. & VoG & $-|M(x)|$ & Gaus. & VoG & $-M(x)$ & Gaus. & VoG & $-M(x)$ & $-|M(x)|$\\ \hline
+    BERT + mean & $\bm{0.886}$&$\bm{0.835}$&$\bm{0.621}$&$\bm{0.886}$&0.936&0.560&$\bm{0.835}$&0.936&0.521&$\bm{0.621}$&0.560&0.521 \\ \hline
+    BERT + attention & 0.829&0.789&0.607&0.829&0.944&0.602&0.789&0.944&0.592&0.607&0.602&0.592 \\ \hline
+    BERT + max pooling & 0.725&0.689&0.526&0.725&0.958&0.398&0.689&0.958&0.391&0.526&0.398&0.391\\ \hline
+    BERT + endpoint & 0.739&0.701&0.476&0.739&0.963&0.314&0.701&0.963&0.302&0.476&0.314&0.302 \\ \hline
+    BERT + diff-sum & 0.718&0.679&0.538&0.718&0.963&0.289&0.679&0.963&0.278&0.538&0.289&0.278 \\ \hline
+    BERT + coherent & 0.702&0.670&0.600&0.702&0.964&0.428&0.670&0.964&0.422&0.600&0.428&0.422\\ \hline
+    DeBERTa + mean & 0.806&0.762&0.226&0.806&0.940&0.238&0.762&0.940&0.216&0.226&0.238&0.216 \\ \hline
+    DeBERTa + attention & 0.575&0.490&0.142&0.575&0.936&$\bm{0.604}$&0.490&0.936&$\bm{0.602}$&0.142&$\bm{0.604}$&$\bm{0.602}$ \\ \hline
+    DeBERTa + max pooling & 0.662&0.633&0.276&0.662&0.962&0.062&0.633&0.962&0.054&0.276&0.062&0.054 \\ \hline
+    DeBERTa + endpoint & 0.589&0.557&0.474&0.589&0.968&0.186&0.557&0.968&0.180&0.474&0.186&0.180 \\ \hline
+    DeBERTa + diff-sum & 0.727&0.697&0.409&0.727&0.968&0.081&0.697&0.968&0.071&0.409&0.081&0.071 \\ \hline
+    DeBERTa + coherent & 0.685&0.665&0.386&0.685&$\bm{0.970}$&0.211&0.665&$\bm{0.970}$&0.212&0.386&0.211&0.212 \\ \hline
+    SpanBERT + endpoint & 0.676&0.644&0.398&0.676&0.965&0.203&0.644&0.965&0.196&0.398&0.203&0.196 \\ \hline
+    \end{tabular}
+    }
+\end{table}
+
+\subsection{Interpretability of methods assessing difficulty}
+In this subsection, we present the spans from the validation set that exhibit the highest difficulty scores, as determined by various methods. Our focus is solely on natural spans derived from the original markups, excluding negative samples.
+
+\begin{description}
+    \item[VoG] In these examples, there are 3 typical situations when span objects has high VoG score. In the first case such span is poly-semantic ("Open") and we observe poly-semantic difficulty of object. In the second case object's difficulty is caused by over-fitting of the model: for example, model thinks, that "II" is a part of person's name instead of event. Third case is when labelling of span is controversial: "Lanka" may be both geo-political and geographical object. Thus, VoG scores are interpretable but many high scores are simply connected with model over-fitting.
+    \item[Margin] If we use $-M(x)$ as difficulty score then in most cases high scores are because model's over-fitting ("Greek", "Time", "Liechtenstein"), so margins are less interpretable. By the way, this method is still able to detect difficult spans: "People", "vote". 
+    \item[Absolute value of margin] In this method we observe that objects with lowest absolute values of margins are quite often correctly classified by the model but this method helps us detect named entities with difficult words and structure: "High Commissioner for Human Rights", "EU Foreign Policy", "Srebrenica" and others. Thus absolute values of margins are interpretable in their own way.
+    \item[Gaussian method] This method has connection with span embeddings anomalies. So there are two different cases: model's over-fitting ("Wimbledon", "Canal") and difficulty of named entities' by themselves ("Please"). 
+\end{description}
+
+Therefore, all four methods are capable of finding difficult objects. It should be noted that they locate objects with varying degrees of difficulty; for example, the method of absolute value of margins enables the detection of spans with challenging names and structure. Additionally, the VoG method, the first approach of the margin method, and the Gaussian method are susceptible to overfitting when assessing the difficulty of objects.
+
+\subsection{Connection between difficulty and consistency}
+
+In this experiment we analysed relation between difficulty scores and confidence scores of spans in several ways.
+
+Firstly, Spearman’s rank correlation was calculated between difficulty scores and uncertainty scores on validation set for each difficulty assessing method and each model assuming that the inconsistency corresponds difficulty. Results are shown in Table~\ref{tab:corr-inc}. Since documents with multi-assessor markups are a minority, the correlations turned out to be quite low. By the way, margin-based approach methods have the highest correlations with uncertainty scores because of direct analysis of classifier's margins. Variance of gradient methods mostly correlates with inconsistency of spans when using DeBERTa and attention pooling, Gaussian method mostly correlates when using BERT with average or attention pooling.
+
+It was mentioned, that there are few documents with several different markups so it was decided to make another experiment: we applied ROC-AUC to difficulty scores considering consistent objects as negative objects and inconsistent objects as positive objects. Thus we checked that inconsistent objects have on average higher difficulty scores than consistent objects. Results are shown in Table~\ref{tab:roc-auc-inc}. Analogically to previous experiment margin-based methods have the highest ROC-AUC. Besides that, we also observe that usage of BERT increases ROC-AUC of margin-based methods (it also increased correlations with uncertainty scores). But if we consider Variance of gradients and Gaussian method then the highest ROC-AUC of VoG corresponds to SpanBERT with endpoint aggregation while the highest ROC-AUC of DeBERTa correspond to DeBERTa with average pooling.
+
+Finally, we also checked whether distributions of difficulty scores of consistent and inconsistent objects differ or not. We calculated p-values from the Kolmogorov-Smirnov test taking into account that small enough p-values allows to reject the hypothesis that difficulty scores of consistent and inconsistent objects are from the same distribution. This rejection occurred to be possible only in several situations when we consider application of margin-based methods to BERT model with max pooling, endpoint, diff-sum or coherent aggregations (p-values are about 1\%). When we consider VoG or Gaussian method then there are few cases when p-values are only about 11-12\%. 
+
+\begin{table}[!htb]
+    \centering
+    \caption{Correlation between inconsistency scores and difficulty scores}\label{tab:corr-inc}
+    \begin{tabular}{|c|c|c|c|c|} 
+        \hline
+        Encoder and method & VoG & $-M(x)$ & $-|M(x)|$ & Gaussian \\ \hline
+        BERT + mean & 0.000 & 0.013 & 0.009 & 0.014 \\ \hline	 
+        BERT + attention & 0.004 & 0.010 & 0.004 & $\bm{0.015}$ \\ \hline
+        BERT + max pooling & 0.003&$\bm{0.028}$&$\bm{0.027}$&0.008 \\ \hline
+        BERT + endpoint & 0.001&0.028&0.026&0.002\\ \hline
+        BERT + diff-sum &0.002&0.028&0.025&0.002\\ \hline
+        BERT + coherent &0.000&0.028&0.026&0.014\\ \hline
+        DeBERTa + mean &0.004&0.010&0.003&0.015\\ \hline
+        DeBERTa + attention &$\bm{0.016}$&0.008&0.004&0.007\\ \hline
+        DeBERTa + max pooling &-0.003&0.012&0.009&0.007\\ \hline
+        DeBERTa + endpoint &-0.003&0.020&0.016&0.001\\ \hline
+        DeBERTa + diff-sum &0.004&0.021&0.017&0.003\\ \hline
+        DeBERTa + coherent &-0.001&0.020&0.016&0.000\\ \hline
+        SpanBERT + endpoint &0.012&0.016&0.015&0.006\\ \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+    \centering
+    \caption{ROC-AUC applied to difficulty scores of consistent objects (as negative ones) and inconsistent objects (as positive ones)}\label{tab:roc-auc-inc}
+    \begin{tabular}{|c|c|c|c|c|} 
+        \hline
+        Encoder and method & VoG & $-M(x)$ & $-|M(x)|$ & Gaussian \\ \hline
+        BERT + mean & 0.503 & 0.628 & 0.581 & 0.634 \\ \hline	 
+        BERT + attention & 0.458 & 0.599 & 0.541 & 0.641 \\ \hline
+        BERT + max pooling & 0.530&$\bm{0.772}$&$\bm{0.755}$&0.573 \\ \hline
+        BERT + endpoint & 0.508&0.765&0.746&0.479\\ \hline
+        BERT + diff-sum &0.484&0.766&0.743&0.478\\ \hline
+        BERT + coherent &0.499&0.765&0.746&0.630\\ \hline
+        DeBERTa + mean &0.535&0.596&0.525&$\bm{0.647}$\\ \hline
+        DeBERTa + attention &0.351&0.578&0.538&0.435\\ \hline
+        DeBERTa + max pooling &0.472&0.613&0.589&0.439\\ \hline
+        DeBERTa + endpoint &0.473&0.688&0.649&0.507\\ \hline
+        DeBERTa + diff-sum &0.542&0.706&0.660&0.475\\ \hline
+        DeBERTa + coherent &0.492&0.693&0.655&0.504\\ \hline
+        SpanBERT + endpoint &$\bm{0.613}$&0.650&0.642&0.562\\ \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+    \centering
+    \caption{The p-values from the Kolmogorov-Smirnov test for checking the hypothesis that difficulty scores of consistent and inconsistent objects are from the same distribution}\label{tab:ks-test-inc}
+    \begin{tabular}{|c|c|c|c|c|} 
+        \hline
+        Encoder and method & VoG & $-M(x)$ & $-|M(x)|$ & Gaussian \\ \hline
+        BERT + mean & 0.940 & 0.399 & 0.355 & 0.386 \\ \hline	 
+        BERT + attention & 0.960 & 0.307 & 0.264 & 0.224 \\ \hline
+        BERT + max pooling & 0.838&$\bm{0.012}$&$\bm{0.009}$&0.392 \\ \hline
+        BERT + endpoint & 0.837&0.028&0.024&0.677\\ \hline
+        BERT + diff-sum &0.865&0.049&0.044&0.835\\ \hline
+        BERT + coherent &0.939&0.025&0.021&$\bm{0.128}$\\ \hline
+        DeBERTa + mean &0.900&0.822&0.783&0.389\\ \hline
+        DeBERTa + attention &0.120&0.606&0.506&0.456\\ \hline
+        DeBERTa + max pooling &0.702&0.736&0.703&0.869\\ \hline
+        DeBERTa + endpoint &0.751&0.272&0.447&0.861\\ \hline
+        DeBERTa + diff-sum &0.718&0.132&0.243&0.783\\ \hline
+        DeBERTa + coherent &0.781&0.415&0.404&0.966\\ \hline
+        SpanBERT + endpoint &$\bm{0.113}$&0.125&0.089&0.576\\ \hline
+    \end{tabular}
 \end{table}
 
 \bibliographystyle{unsrtnat}

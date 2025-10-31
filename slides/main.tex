@@ -1,0 +1,298 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass{beamer}
+
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+\usetheme{Madrid}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+%\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{textpos}
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+\usepackage{cmap}
+\usepackage{tikz}  
+\usetikzlibrary{graphs}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{wrapfig}
+\usepackage{bm}
+
+\usepackage[backend=biber, sorting=none, maxnames=10, style=numeric]{biblatex}
+\addbibresource{slides/references.bib}
+\usepackage[normalem]{ulem}% waved underline
+\renewcommand*{\bibfont}{\scriptsize}
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE 1
+%----------------------------------------------------------------------------------------
+\begin{document}
+
+ \title[Difficulty assessment]{\vspace{0.15cm}Assessing the Difficulty of Spans Within Nested Text Markup Data Models}  % The short title appears at the bottom of every slide, the full title is only on the title page
+  \author[Tabachenkov Andrei]{ Tabachenkov Andrei M.
+\newline \newline\scriptsize{ 417 group
+\newline } \newline
+\scriptsize{Scientific supervisor: Maysuradze Archil I.} }
+%\date{}
+\scriptsize{\date{}} % Date, can be changed to a custom date
+
+
+
+%\begin{frame}
+%\titlepage % Print the title page as the first slide
+%\end{frame}
+
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\begin{frame}
+\titlepage 
+\end{frame}
+\section{Language model training and validation}
+\begin{frame}
+    \frametitle{Language model training and validation}
+    \begin{table}[!htb]
+    \centering
+    \caption{Validation of language model}\label{tab:val}
+    \begin{tabular}{|c|c|c|c|c|} 
+        \hline
+        Encoder and method & Accuracy & Precision-Macro & Recall-Macro & F1-micro \\ \hline
+        BERT + mean & 0.887	 & 0.761 & 0.699 & 0.720 \\ \hline	 
+        BERT + attention & 0.900 & 0.652 & 0.648 & 0.650 \\ \hline
+        BERT + max pooling & 0.914&0.717&0.647&0.667 \\ \hline
+        BERT + endpoint & 0.915&0.750&0.663&0.689\\ \hline
+        BERT + diff-sum &0.914&0.761&0.701&0.724\\ \hline
+        BERT + coherent &0.914&0.788&0.702&0.732\\ \hline
+        DeBERTa + mean &0.899&0.705&0.640&0.657\\ \hline
+        DeBERTa + attention &0.898&0.704&0.614&0.624\\ \hline
+        DeBERTa + max pooling &0.915&0.716&0.646&0.666\\ \hline
+        DeBERTa + endpoint &0.917&0.810&0.704&0.739\\ \hline
+        DeBERTa + diff-sum &$\bm{0.919}$&$\bm{0.812}$&$\bm{0.705}$&$\bm{0.740}$\\ \hline
+        DeBERTa + coherent &0.916&0.701&0.656&0.671\\ \hline
+        SpanBERT + endpoint &0.911&0.714&0.618&0.631\\ \hline
+    \end{tabular}
+\end{table}
+\end{frame}
+
+\section{Validation of methods assessing difficulty}
+\begin{frame}{Validation of methods assessing difficulty}
+    \begin{table}[!htb]
+    \centering
+    \caption{ROC-AUC for difficulty assessing methods applied to different difficult datasets}\label{tab:diff_val}
+    \scalebox{0.7}{
+    \tiny
+    \begin{tabular}{|c|*{12}{c|}}
+    \hline
+    \multirow{2}{*}{\textbf{Encoder + method}} & \multicolumn{4}{c|}{\textbf{Noisy dataset}} & \multicolumn{4}{c|}{\textbf{Drug-dosage}} & \multicolumn{4}{c|}{\textbf{Drug-effect}} \\ \cline{2-13}
+    & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. & VoG & $-M(x)$ & $-|M(x)|$ & Gaus. \\ \hline
+    BERT + mean & 0.563 & 0.584 & 0.590 & 0.999 & 0.737 & 0.766 & 0.802 & 0.948 & 0.694 & 0.698 & 0.732 & 0.933 \\ \hline
+    BERT + attention & 0.542 & 0.571 & 0.573 & 0.999 & 0.796 & 0.830 & $\bm{0.846}$ & 0.953 & 0.758 & 0.783 & 0.801 & 0.936 \\ \hline
+    BERT + max pooling & 0.560 & 0.594 & 0.593 & 0.456 & 0.855 & 0.826 & 0.820 & 0.958 & 0.863 & 0.841 & $\bm{0.828}$ & 0.950 \\ \hline
+    BERT + endpoint & 0.581 & 0.610 & 0.610 & $\bm{1.000}$ & 0.826 & 0.830 & 0.801 & 0.960 & 0.842 & 0.788 & 0.764 & 0.957 \\ \hline
+    BERT + diff-sum & 0.571 & 0.611 & 0.610 & $\bm{1.000}$ & $\bm{0.869}$ & $\bm{0.865}$ & 0.805 & $\bm{0.967}$ & 0.856 & $\bm{0.863}$ & 0.808 & $\bm{0.965}$ \\ \hline
+    BERT + coherent & 0.546 & 0.605 & 0.603 & 0.472 & 0.848 & 0.845 & 0.806 & 0.935 & $\bm{0.867}$ & 0.852 & 0.810 & 0.925 \\ \hline
+    DeBERTa + mean & 0.578 & 0.598 & 0.599 & 0.999 & 0.762 & 0.742 & 0.779 & 0.935 & 0.767 & 0.683 & 0.716 & 0.925 \\ \hline
+    DeBERTa + attention & $\bm{0.617}$ & 0.603 & 0.606 & 0.999 & 0.572 & 0.818 & 0.842 & 0.945 & 0.539 & 0.759 & 0.769 & 0.921 \\ \hline
+    DeBERTa + max pooling & 0.572 & 0.613 & 0.613 & 0.424 & 0.839 & 0.807 & 0.796 & 0.910 & 0.846 & 0.780 & 0.751 & 0.891 \\ \hline
+    DeBERTa + endpoint & 0.553 & 0.616 & 0.616 & $\bm{1.000}$ & 0.800 & 0.831 & 0.767 & 0.941 & 0.827 & 0.837 & 0.752 & 0.937 \\ \hline
+    DeBERTa + diff-sum & 0.580 & $\bm{0.616}$ & $\bm{0.616}$ & $\bm{1.000}$ & 0.845 & 0.809 & 0.781 & 0.913 & 0.835 & 0.831 & 0.789 & 0.920 \\ \hline
+    DeBERTa + coherent & 0.571 & 0.609 & 0.608 & 0.448 & 0.805 & 0.830 & 0.712 & 0.900 & 0.801 & 0.815 & 0.685 & 0.873 \\ \hline
+    SpanBERT + endpoint & 0.560 & 0.612 & 0.611 & $\bm{1.000}$ & 0.841 & 0.848 & 0.725 & 0.955 & 0.864 & 0.846 & 0.695 & 0.946 \\ \hline
+    \end{tabular}
+    }
+\end{table}
+\end{frame}
+
+\section{Correlations between difficulty assessing methods}
+\begin{frame}{Correlations between difficulty assessing methods}
+    \begin{table}[!htb]
+    \centering
+    \caption{Correlations between different difficulty assessing methods for different models}\label{tab:diff_corr}
+    \scalebox{0.7}{
+    \tiny
+    \begin{tabular}{|c|*{12}{c|}}
+    \hline
+    \multirow{2}{*}{\textbf{Encoder + method}} & \multicolumn{3}{c|}{\textbf{VoG}} & \multicolumn{3}{c|}{\textbf{$-M(x)$}} & \multicolumn{3}{c|}{\textbf{$-|M(x)|$}} & \multicolumn{3}{c|}{\textbf{Gaussian}}\\ \cline{2-13}
+    & $-M(x)$ & $-|M(x)|$ & Gaus. & VoG & $-|M(x)|$ & Gaus. & VoG & $-M(x)$ & Gaus. & VoG & $-M(x)$ & $-|M(x)|$\\ \hline
+    BERT + mean & $\bm{0.886}$&$\bm{0.835}$&$\bm{0.621}$&$\bm{0.886}$&0.936&0.560&$\bm{0.835}$&0.936&0.521&$\bm{0.621}$&0.560&0.521 \\ \hline
+    BERT + attention & 0.829&0.789&0.607&0.829&0.944&0.602&0.789&0.944&0.592&0.607&0.602&0.592 \\ \hline
+    BERT + max pooling & 0.725&0.689&0.526&0.725&0.958&0.398&0.689&0.958&0.391&0.526&0.398&0.391\\ \hline
+    BERT + endpoint & 0.739&0.701&0.476&0.739&0.963&0.314&0.701&0.963&0.302&0.476&0.314&0.302 \\ \hline
+    BERT + diff-sum & 0.718&0.679&0.538&0.718&0.963&0.289&0.679&0.963&0.278&0.538&0.289&0.278 \\ \hline
+    BERT + coherent & 0.702&0.670&0.600&0.702&0.964&0.428&0.670&0.964&0.422&0.600&0.428&0.422\\ \hline
+    DeBERTa + mean & 0.806&0.762&0.226&0.806&0.940&0.238&0.762&0.940&0.216&0.226&0.238&0.216 \\ \hline
+    DeBERTa + attention & 0.575&0.490&0.142&0.575&0.936&$\bm{0.604}$&0.490&0.936&$\bm{0.602}$&0.142&$\bm{0.604}$&$\bm{0.602}$ \\ \hline
+    DeBERTa + max pooling & 0.662&0.633&0.276&0.662&0.962&0.062&0.633&0.962&0.054&0.276&0.062&0.054 \\ \hline
+    DeBERTa + endpoint & 0.589&0.557&0.474&0.589&0.968&0.186&0.557&0.968&0.180&0.474&0.186&0.180 \\ \hline
+    DeBERTa + diff-sum & 0.727&0.697&0.409&0.727&0.968&0.081&0.697&0.968&0.071&0.409&0.081&0.071 \\ \hline
+    DeBERTa + coherent & 0.685&0.665&0.386&0.685&$\bm{0.970}$&0.211&0.665&$\bm{0.970}$&0.212&0.386&0.211&0.212 \\ \hline
+    SpanBERT + endpoint & 0.676&0.644&0.398&0.676&0.965&0.203&0.644&0.965&0.196&0.398&0.203&0.196 \\ \hline
+    \end{tabular}
+    }
+\end{table}
+\end{frame}
+
+\section{Interpretability of methods assessing difficulty}
+\begin{frame}{Interpretability of methods assessing difficulty}
+    \begin{description}
+    \item[VoG] In these examples, there are 3 typical situations when span objects has high VoG score. In the first case such span is poly-semantic ("Open") and we observe poly-semantic difficulty of object. In the second case object's difficulty is caused by over-fitting of the model: for example, model thinks, that "II" is a part of person's name instead of event. Third case is when labelling of span is controversial: "Lanka" may be both geo-political and geographical object. Thus, VoG scores are interpretable but many high scores are simply connected with model over-fitting.
+    \item[Margin] If we use $-M(x)$ as difficulty score then in most cases high scores are because model's over-fitting ("Greek", "Time", "Liechtenstein"), so margins are less interpretable. By the way, this method is still able to detect difficult spans: "People", "vote". 
+    \item[Absolute value of margin] In this method we observe that objects with lowest absolute values of margins are quite often correctly classified by the model but this method helps us detect named entities with difficult words and structure: "High Commissioner for Human Rights", "EU Foreign Policy", "Srebrenica" and others. Thus absolute values of margins are interpretable in their own way.
+    \item[Gaussian method] This method has connection with span embeddings anomalies. So there are two different cases: model's over-fitting ("Wimbledon", "Canal") and difficulty of named entities' by themselves ("Please"). 
+\end{description}
+\end{frame}
+
+\section{Connection between difficulty and consistency}
+\begin{frame}{Connection between difficulty and consistency}
+    \begin{table}[!htb]
+    \centering
+    \caption{Correlation between inconsistency scores and difficulty scores}\label{tab:corr-inc}
+    \begin{tabular}{|c|c|c|c|c|} 
+        \hline
+        Encoder and method & VoG & $-M(x)$ & $-|M(x)|$ & Gaussian \\ \hline
+        BERT + mean & 0.000 & 0.013 & 0.009 & 0.014 \\ \hline	 
+        BERT + attention & 0.004 & 0.010 & 0.004 & $\bm{0.015}$ \\ \hline
+        BERT + max pooling & 0.003&$\bm{0.028}$&$\bm{0.027}$&0.008 \\ \hline
+        BERT + endpoint & 0.001&0.028&0.026&0.002\\ \hline
+        BERT + diff-sum &0.002&0.028&0.025&0.002\\ \hline
+        BERT + coherent &0.000&0.028&0.026&0.014\\ \hline
+        DeBERTa + mean &0.004&0.010&0.003&0.015\\ \hline
+        DeBERTa + attention &$\bm{0.016}$&0.008&0.004&0.007\\ \hline
+        DeBERTa + max pooling &-0.003&0.012&0.009&0.007\\ \hline
+        DeBERTa + endpoint &-0.003&0.020&0.016&0.001\\ \hline
+        DeBERTa + diff-sum &0.004&0.021&0.017&0.003\\ \hline
+        DeBERTa + coherent &-0.001&0.020&0.016&0.000\\ \hline
+        SpanBERT + endpoint &0.012&0.016&0.015&0.006\\ \hline
+    \end{tabular}
+\end{table}
+\end{frame}
+\begin{frame}{Connection between difficulty and consistency}
+    \begin{table}[!htb]
+    \centering
+    \caption{ROC-AUC applied to difficulty scores of consistent objects (as negative ones) and inconsistent objects (as positive ones)}\label{tab:roc-auc-inc}
+    \begin{tabular}{|c|c|c|c|c|} 
+        \hline
+        Encoder and method & VoG & $-M(x)$ & $-|M(x)|$ & Gaussian \\ \hline
+        BERT + mean & 0.503 & 0.628 & 0.581 & 0.634 \\ \hline	 
+        BERT + attention & 0.458 & 0.599 & 0.541 & 0.641 \\ \hline
+        BERT + max pooling & 0.530&$\bm{0.772}$&$\bm{0.755}$&0.573 \\ \hline
+        BERT + endpoint & 0.508&0.765&0.746&0.479\\ \hline
+        BERT + diff-sum &0.484&0.766&0.743&0.478\\ \hline
+        BERT + coherent &0.499&0.765&0.746&0.630\\ \hline
+        DeBERTa + mean &0.535&0.596&0.525&$\bm{0.647}$\\ \hline
+        DeBERTa + attention &0.351&0.578&0.538&0.435\\ \hline
+        DeBERTa + max pooling &0.472&0.613&0.589&0.439\\ \hline
+        DeBERTa + endpoint &0.473&0.688&0.649&0.507\\ \hline
+        DeBERTa + diff-sum &0.542&0.706&0.660&0.475\\ \hline
+        DeBERTa + coherent &0.492&0.693&0.655&0.504\\ \hline
+        SpanBERT + endpoint &$\bm{0.613}$&0.650&0.642&0.562\\ \hline
+    \end{tabular}
+\end{table}
+\end{frame}
+\begin{frame}{Connection between difficulty and consistency}
+    \begin{table}[!htb]
+    \centering
+    \caption{The p-values from the Kolmogorov-Smirnov test for checking the hypothesis that difficulty scores of consistent and inconsistent objects are from the same distribution}\label{tab:ks-test-inc}
+    \begin{tabular}{|c|c|c|c|c|} 
+        \hline
+        Encoder and method & VoG & $-M(x)$ & $-|M(x)|$ & Gaussian \\ \hline
+        BERT + mean & 0.940 & 0.399 & 0.355 & 0.386 \\ \hline	 
+        BERT + attention & 0.960 & 0.307 & 0.264 & 0.224 \\ \hline
+        BERT + max pooling & 0.838&$\bm{0.012}$&$\bm{0.009}$&0.392 \\ \hline
+        BERT + endpoint & 0.837&0.028&0.024&0.677\\ \hline
+        BERT + diff-sum &0.865&0.049&0.044&0.835\\ \hline
+        BERT + coherent &0.939&0.025&0.021&$\bm{0.128}$\\ \hline
+        DeBERTa + mean &0.900&0.822&0.783&0.389\\ \hline
+        DeBERTa + attention &0.120&0.606&0.506&0.456\\ \hline
+        DeBERTa + max pooling &0.702&0.736&0.703&0.869\\ \hline
+        DeBERTa + endpoint &0.751&0.272&0.447&0.861\\ \hline
+        DeBERTa + diff-sum &0.718&0.132&0.243&0.783\\ \hline
+        DeBERTa + coherent &0.781&0.415&0.404&0.966\\ \hline
+        SpanBERT + endpoint &$\bm{0.113}$&0.125&0.089&0.576\\ \hline
+    \end{tabular}
+\end{table}
+\end{frame}
+%\input{slides/references}
+
+%\begin{frame}
+%\Huge{\centerline{Спасибо за внимание!}}
+%\end{frame}
+
+%----------------------------------------------------------------------------------------
+
+
+\end{document} 
