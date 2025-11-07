@@ -498,6 +498,21 @@ Finally, we also checked whether distributions of difficulty scores of consisten
     \end{tabular}
 \end{table}
 
+\section{Conclusion}
+This article presents a pipeline for estimating the model-specific difficulty of a tagged text span, with an ultimate goal of enhancing the performance of machine learning models. Within this context, the difficulty of an object is defined as the complexity a machine learning model encounters when processing it for a specific task. An established language model architecture, recognised for its high-quality vectorisation capabilities, was adapted for this purpose. A language model was subsequently trained and evaluated using our approach. The efficacy of the task-specific difficulty assessment methods was then analysed through multiple approaches; these included calculating the ROC-AUC metric across various pseudo-difficult datasets and conducting a qualitative examination of objects assigned the highest difficulty scores.
+
+The Gaussian approach~\cite{Lee2018ASU} was found to achieve the highest ROC-AUC score. In contrast, the margin method, which utilises absolute values to derive difficulty scores, demonstrated greater interpretability. Furthermore, our analysis identified variations in the perceived difficulty of individual objects, which were contingent upon the specific assessment method employed.
+
+Besides that, DeBERTa with endpoint and diff-sum span aggregations achived the highest ROC-AUC scores across all methods which indicates a connection between the quality of models and the quality of the difficulty assessment of spans relative to its work.
+
+Additionally, a comparison was made between different types of datasets containing difficult examples. The use of datasets comprising texts on diverse topics proved to be a more stable and reliable basis for the application of various difficulty assessment techniques. Conversely, the qualitative recognition of difficulty within a noisy dataset was found to necessitate direct analysis of the span embeddings themselves.
+
+Then we checked interpretability of difficulty assessing methods. We checked that methods correlate with each other but defined that degrees of correlations differ - Gaussian method have lowest correlation scores because it analyses span embeddings directly unlike other methods.
+
+We also considered spans with the highest difficulty scores and discovered that absolute margin method is the most interpretable while other methods sometimes return high difficulty scores due to overfitting of models. Method of absolute margins finds spans with difficult words and phrases, variance of gradients method often finds spans with poly-semantic meaning. 
+
+Finally we discovered whether difficulty scores and consistency of spans have connection or not calculating rank correlations, ROC-AUC and p-values from the Kolmogorov-Smirnov test. Margin-based methods assess difficulty scores that have the highest connection with consistency of spans and it is best demonstrated when using max pooling aggregation with BERT encoder. Variance of gradients method and Gaussian method have high connection between difficulty and consistency infrequently when using only certain models and aggregation techniques.
+
 \bibliographystyle{unsrtnat}
 \bibliography{references}
 
